@@ -4,11 +4,27 @@ syscall:::entry
 }
 proc:::exec-success 
 /
-	uid == 0
+	uid == $uid
 /
 {
 	trace(curpsinfo->pr_psargs); 
 }
+proc:::start
+{
+        self->start = timestamp;
+}
+proc:::exit
+/self->start/
+{
+        @[execname] = quantize(timestamp - self->start);
+        self->start = 0;
+}
+
+proc:::signal-send
+{
+        @[execname, stringof(args[1]->pr_fname), args[2]] = count();
+}
+
 syscall::open*:entry
 {
 	printf("%s %s",execname,copyinstr(arg0));
@@ -19,21 +35,9 @@ syscall:::entry
 }
 syscall:::exit
 {
-	@num[execname] = count();
-}
-syscall:::entry
-{
-	@num[probefunc] = count();
-}
-syscall:::exit
-{
 	@num[probefunc] = count();
 }
 syscall:::entry
-{
-	@num[pid,execname] = count();
-}
-syscall:::exit
 {
 	@num[pid,execname] = count();
 }
