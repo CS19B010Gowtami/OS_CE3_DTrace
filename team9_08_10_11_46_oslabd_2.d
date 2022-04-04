@@ -1,7 +1,7 @@
 
 syscall:::entry
 /
-	gid == $1 || gid == $2 || gid == $3 || uid == $4
+	uid == $1
 /
 {
 	trace(execname);
@@ -12,7 +12,7 @@ syscall:::entry
 
 syscall::open*:entry
 /
-	gid == $1 || gid == $2 || gid == $3 || uid == $4
+	uid == $1
 /
 {
 	/*printf("%s %s",execname,copyinstr(arg0));*/
@@ -25,7 +25,7 @@ syscall::open*:entry
 
 syscall:::return
 /
-	gid == $1 || gid == $2 || gid == $3 || uid == $4
+	uid == $1
 /
 {
 	trace("Returning From Syscall");
@@ -37,7 +37,7 @@ syscall:::return
 
 proc:::exit
 /
-	gid == $1 || gid == $2 || gid == $3 || uid == $4
+	uid == $1
 /
 {
         @[execname] = quantize(timestamp);
