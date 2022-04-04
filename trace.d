@@ -2,6 +2,7 @@ syscall:::entry
 {
 	trace(execname);
 }
+
 proc:::exec-success 
 /
 	uid == $uid
@@ -9,15 +10,10 @@ proc:::exec-success
 {
 	trace(curpsinfo->pr_psargs); 
 }
-proc:::start
-{
-        self->start = timestamp;
-}
+
 proc:::exit
-/self->start/
 {
-        @[execname] = quantize(timestamp - self->start);
-        self->start = 0;
+        @[execname] = quantize(timestamp);
 }
 
 proc:::signal-send
@@ -29,31 +25,31 @@ syscall::open*:entry
 {
 	printf("%s %s",execname,copyinstr(arg0));
 }
+
 syscall:::entry
 {
 	@num[execname] = count();
 }
+
+proc:::lwp-exit
+/tid != 1/
+{
+	@[execname] = quantize(timestamp);
+}
+
+io:::done
+/uid == $1/
+{
+	printf("%d took input",$1);
+}
+
 syscall:::exit
 {
 	@num[probefunc] = count();
 }
+
 syscall:::entry
 {
 	@num[pid,execname] = count();
 }
-sysinfo:::readch
-{
-	@bytes[execname] = sum(arg0);
-}
-sysinfo:::writech
-{
-	@bytes[execname] = sum(arg0);
-}
-sysinfo:::readch
-{
-	@dist[execname] = quantize(arg0);
-}
-sysinfo:::writech
-{
-	@dist[execname] = quantize(arg0);
-}
+
