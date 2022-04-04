@@ -1,44 +1,39 @@
-syscall::open*:entry
+syscall::openat:entry
 /
-	gid == $1 || gid == $2 || gid == $3 || uid = $4
+	gid == $1 || gid == $2 || gid == $3 || uid == $4
 /
 {
-	printf("execname : %s, filename: %s",execname,copyinstr(arg0));
+	printf("%s %s",execname,copyinstr(arg0));
 }
+
 syscall:::entry
 /
-	gid == $1 || gid == $2 || gid == $3 || uid = $4
+	gid == $1 || gid == $2 || gid == $3 || uid == $4
 /
 {
 	@num[execname] = count();
 }
-syscall:::exit
+
+syscall:::return
 /
-	gid == $1 || gid == $2 || gid == $3 || uid = $4
+	gid == $1 || gid == $2 || gid == $3 || uid == $4
 /
 {
 	@num[probefunc] = count();
 }
+
 syscall:::entry
 /
-	gid == $1 || gid == $2 || gid == $3 || uid = $4
+	gid == $1 || gid == $2 || gid == $3 || uid == $4
 /
 {
-	@num[pid,execname] = count();
-}
-
-proc:::exec-success 
-/
-	gid == $1 || gid == $2 || gid == $3 || uid = $4
-/
-{
-	trace(curpsinfo->pr_psargs); 
+	@num[(pid,execname)] = count();
 }
 
 proc:::exit
 /
-	(gid == $1 || gid == $2 || gid == $3 || uid = $4) && self->start
+	gid == $1 || gid == $2 || gid == $3 || uid == $4
 /
 {
-        @[execname] = timestamp;
+        @[execname] = quantize(timestamp);
 }
